@@ -1,0 +1,45 @@
+# Default-deny: generated game assets and local installs stay private
+/*
+!/.gitignore
+!/README.md
+!/LICENSE
+!/LICENSE.md
+!/LICENSE.txt
+!/build.py
+!/requirements.txt
+!/docs/
+!/tools/
+!/dino-port/
+
+# Only hand-written runtime source; generated headers and all atlases stay local.
+/dino-port/*
+!/dino-port/source/
+/dino-port/source/*
+!/dino-port/source/main.c
+!/dino-port/source/audio.c
+!/dino-port/source/audio.h
+
+# Only the build scripts and configuration are shared from tools/.
+/tools/*
+!/tools/*.py
+!/tools/*.c
+!/tools/*.h
+!/tools/*.rsf
+!/tools/map_convert.js
+
+
+
+# Even in allowed directories, exclude common generated artifacts.
+*.3dsx
+*.cia
+*.elf
+*.t3x
+*.pcm
+*.swf
+*.jpg
+*.jpeg
+*.png
+*.wav
+*.mp3
+*.jar
+__pycache__/
