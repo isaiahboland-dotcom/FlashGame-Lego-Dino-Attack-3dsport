@@ -687,7 +687,9 @@ int main(void) {
 #endif
         C2D_TextOptimize(&won_text);
     }
-    while (aptMainLoop()) {
+    bool system_exit = false;
+    while (true) {
+        if (!aptMainLoop()) { system_exit = true; break; }
         hidScanInput();
         u32 kDown = hidKeysDown(), held = hidKeysHeld();
         audio_menu(menu_screen != 2 || level_won);
@@ -1718,8 +1720,11 @@ int main(void) {
     C3D_Fini();
     gfxExit();
 #ifdef DINO_CAMPAIGN
-    return campaign_advance ? 1 : 0;
+    return system_exit ? -1 : campaign_advance ? 1 : 0;
+#elif defined(DINO_TEST_BUILD)
+    return system_exit ? -1 : 0;
 #else
+    (void)system_exit;
     return 0;
 #endif
 }
