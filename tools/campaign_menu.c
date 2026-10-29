@@ -106,6 +106,7 @@ int main(void) {
                 while (launch) {
                     running_level = launch;
                     int completed = levels[launch - 1]();
+                    if (completed < 0) return 0;
                     launch = completed && running_level < 9 ? running_level + 1 : 0;
                 }
                 video_start();
