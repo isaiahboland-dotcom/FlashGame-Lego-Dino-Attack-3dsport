@@ -47,15 +47,10 @@ int main(void) {
         if (down & KEY_DDOWN) choice = (choice + 1) % 9;
         if (down & KEY_A) {
             video_stop();
-            if (choice == 0) dino_level1_main();
-            else if (choice == 1) dino_level2_main();
-            else if (choice == 2) dino_level3_main();
-            else if (choice == 3) dino_level4_main();
-            else if (choice == 4) dino_level5_main();
-            else if (choice == 5) dino_level6_main();
-            else if (choice == 6) dino_level7_main();
-            else if (choice == 7) dino_level8_main();
-            else dino_level9_main();
+            int (*const levels[])(void) = {dino_level1_main, dino_level2_main,
+                dino_level3_main, dino_level4_main, dino_level5_main,
+                dino_level6_main, dino_level7_main, dino_level8_main, dino_level9_main};
+            if (levels[choice]() < 0) return 0;
             video_start();
             continue;
         }
