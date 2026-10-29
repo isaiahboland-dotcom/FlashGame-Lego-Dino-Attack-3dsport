@@ -109,7 +109,3 @@ launcher behavior. Audio playback may require the console's DSP firmware.
 - [Build and installation guide](docs/BUILDING.md)
 - [Porting decisions and known limitations](docs/DECISIONS.md)
 - [Architecture and asset pipeline](docs/ARCHITECTURE.md)
-
-The `.gitignore` intentionally excludes local game files, extracted assets,
-build products, screenshots, third-party tools, and research dumps. Review files
-before publishing: already tracked files are not removed by `.gitignore`.
