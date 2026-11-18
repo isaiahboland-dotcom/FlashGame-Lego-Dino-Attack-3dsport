@@ -21,19 +21,44 @@ timings are approximations, and the original ending movies are not implemented.
 
 ### The easy way: the launcher
 
-The launcher is a window that runs the build for you. Build it from source
-with `cargo build --release --manifest-path launcher/Cargo.toml`, or download
-the `DinoAttack-Launcher-<version>-linux.tar.gz` or `-windows.zip` package from
-the releases page. Either way it needs the tools listed under "Command line"
-below. The launcher's log lists anything missing when it starts.
+The launcher is a window that runs the build for you. Download the
+`DinoAttack-Launcher-<version>-linux.tar.gz` or `-windows.zip` package from the
+releases page and unpack it, or build the launcher from source with
+`cargo build --release --manifest-path launcher/Cargo.toml`.
 
-1. Run `dino-launcher` (`dino-launcher.exe` on Windows).
-2. Pick your `DinoAttackGame` folder (the one that contains `Launcher.swf`).
-3. Pick your SD card, tick `.3dsx` and/or `.cia`, and press **Build**.
+**The release packages don't include everything the build needs.** They
+contain the launcher, the build scripts, FFDec, and the `.cia` tools, but you
+install these yourself (about 15 minutes, once):
+
+| Needed for | Windows | Linux (Arch) | Linux (Debian/Ubuntu) |
+| --- | --- | --- | --- |
+| Python 3 with Pillow and NumPy | `winget install Python.Python.3.12`, then `py -3 -m pip install -r requirements.txt` in the package folder | `sudo pacman -S python-pillow python-numpy` | `sudo apt install python3-pil python3-numpy` |
+| Java 8 or newer (runs FFDec) | `winget install EclipseAdoptium.Temurin.21.JDK` | `sudo pacman -S jre-openjdk-headless` | `sudo apt install default-jre-headless` |
+| FFmpeg | `winget install Gyan.FFmpeg` | `sudo pacman -S ffmpeg` | `sudo apt install ffmpeg` |
+| devkitPro's 3DS tools (`3ds-dev`) | Install the devkitPro Updater from [devkitpro.org](https://devkitpro.org/wiki/Getting_Started) and select the 3DS development tools | Install devkitPro's pacman (see [devkitPro pacman](https://devkitpro.org/wiki/devkitPro_pacman)), then `sudo dkp-pacman -S 3ds-dev` | the same as Arch |
+
+Open a new terminal after installing so the programs are on PATH. The package
+names are the usual ones but can differ between distributions and versions.
+
+Then:
+
+1. Run `dino-launcher` (`dino-launcher.exe` on Windows). Keep it in the folder
+   it came in, next to `build.py`, `tools/` and `ffdec_26.4.0/`.
+2. The launcher looks for each program above by itself and shows what it
+   found on the **Settings** tab. The log on the **Build** tab says what's
+   missing, and Build stays disabled until the core programs are found.
+3. If a program is somewhere unusual (devkitPro in a custom folder, Python in
+   a virtual environment, and so on), set its path on the **Settings** tab with
+   **Browse...**. Clear a field and press **Automatic** to go back to finding it
+   by itself. Settings are saved in `%APPDATA%\dinoattack-3ds-launcher\settings.txt`
+   on Windows and `~/.config/dinoattack-3ds-launcher/settings.txt` on Linux.
+4. Pick your `DinoAttackGame` folder (the one that contains `Launcher.swf`),
+   pick your SD card, tick `.3dsx` and/or `.cia`, and press **Build**.
 
 The launcher copies `3ds/dinodino.3dsx` and `cias/dinodino.cia` to the card and
 leaves your saves in `3ds/dinodino/` alone. The `.cia` option is experimental,
-and the Windows build is untested.
+and the Windows build is untested. `dino-launcher --check` prints where each
+program was found, which helps when something is missing.
 
 ### Command line
 

@@ -7,6 +7,8 @@
 
 mod gui;
 mod pipeline;
+mod settings;
+mod tools;
 
 use std::path::PathBuf;
 
@@ -49,10 +51,31 @@ fn cli(args: &[String]) -> std::process::ExitCode {
     }
 }
 
+/// Prints where each tool was found (or why it wasn't), for debugging a setup.
+fn check() -> std::process::ExitCode {
+    let settings = settings::Settings::load();
+    let mut ok = true;
+    for (tool, found) in tools::check_all(&settings) {
+        match found {
+            Ok(f) => println!("ok       {:<10} {}{}", tool.short(), f.path.display(), if f.custom { "  (from Settings)" } else { "" }),
+            Err(e) => {
+                if !tool.needs_cia() {
+                    ok = false;
+                }
+                println!("missing  {:<10} {e}", tool.short());
+            }
+        }
+    }
+    if ok { std::process::ExitCode::SUCCESS } else { std::process::ExitCode::FAILURE }
+}
+
 fn main() -> std::process::ExitCode {
     let args: Vec<String> = std::env::args().skip(1).collect();
     if args.iter().any(|a| a == "--cli") {
         return cli(&args);
+    }
+    if args.iter().any(|a| a == "--check") {
+        return check();
     }
     match gui::run() {
         Ok(()) => std::process::ExitCode::SUCCESS,
