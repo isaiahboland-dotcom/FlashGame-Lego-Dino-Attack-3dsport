@@ -1,0 +1,169 @@
+# Builds the launcher packages (Windows .zip, Linux .tar.gz) and, for a v* tag,
+# attaches them to a GitHub release. Nothing here touches the game: the packages
+# hold only this project's code and build tools. The player's own game files
+# are converted on their machine by the launcher.
+name: Release packages
+
+permissions:
+  contents: write
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+env:
+  CARGO_TERM_COLOR: always
+  # FFDec is downloaded from its upstream release and bundled unchanged.
+  FFDEC_TAG: version26.4.0
+  FFDEC_ZIP: ffdec_26.4.0.zip
+  # makerom and bannertool, built from these revisions (the same pins as the
+  # Kingdom port's tools/cia/build.sh).
+  MAKEROM_REPO: https://github.com/3DSGuy/Project_CTR.git
+  MAKEROM_REV: e8f5f529c54ff9b22a2491a480ffa69206bf7b19
+  BANNERTOOL_REPO: https://github.com/diasurgical/bannertool.git
+  BANNERTOOL_REV: 16d8c5a0ce02a5e06e64ab42275132fca57c04a2
+
+jobs:
+  # The launcher GUI, per OS.
+  launcher:
+    name: Launcher (${{ matrix.name }})
+    strategy:
+      matrix:
+        include:
+          - name: linux
+            os: ubuntu-latest
+          - name: windows
+            os: windows-latest
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - if: matrix.name == 'linux'
+        run: sudo apt-get update && sudo apt-get install -y libxkbcommon-dev libwayland-dev libx11-dev libxi-dev libgl1-mesa-dev
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: launcher
+      - run: cargo build --release --locked --manifest-path launcher/Cargo.toml
+      - name: Stage
+        shell: bash
+        run: |
+          x=""; [ "${{ matrix.name }}" = windows ] && x=".exe"
+          mkdir -p stage
+          cp "launcher/target/release/dino-launcher$x" stage/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: launcher-${{ matrix.name }}
+          path: stage
+
+  # FFDec, unpacked as the build expects (ffdec_26.4.0/ffdec.jar).
+  ffdec:
+    name: FFDec
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Download and unpack
+        run: |
+          gh release download "$FFDEC_TAG" -R jindrapetrik/jpexs-decompiler -p "$FFDEC_ZIP"
+          mkdir -p stage/ffdec_26.4.0
+          unzip -q "$FFDEC_ZIP" -d stage/ffdec_26.4.0
+          test -f stage/ffdec_26.4.0/ffdec.jar
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ffdec
+          path: stage
+
+  # makerom and bannertool for the .cia, built from the pinned revisions above.
+  # Windows is best effort: if it fails, the Windows package is built without
+  # them and the launcher greys out the .cia box.
+  cia-tools:
+    name: .cia tools (${{ matrix.name }})
+    continue-on-error: ${{ matrix.name == 'windows' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: linux
+            os: ubuntu-latest
+          - name: windows
+            os: windows-latest
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: ${{ matrix.name == 'windows' && 'msys2 {0}' || 'bash' }}
+    steps:
+      - uses: actions/checkout@v4
+      - if: matrix.name == 'windows'
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          update: false
+          install: git make zip mingw-w64-x86_64-toolchain
+      - name: Build makerom and bannertool
+        run: |
+          mkdir -p stage/bin
+          git clone --quiet "$MAKEROM_REPO" Project_CTR
+          git -C Project_CTR checkout --quiet "$MAKEROM_REV"
+          make -C Project_CTR/makerom deps
+          make -C Project_CTR/makerom program
+          cp Project_CTR/makerom/bin/makerom* stage/bin/
+          git clone --quiet "$BANNERTOOL_REPO" bannertool
+          git -C bannertool checkout --quiet "$BANNERTOOL_REV"
+          git -C bannertool submodule update --quiet --init --depth 1
+          make -C bannertool
+          cp "$(find bannertool/output -type f \( -name bannertool -o -name bannertool.exe \) | head -n 1)" stage/bin/
+          ls -l stage/bin
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cia-${{ matrix.name }}
+          path: stage
+
+  package:
+    name: Packages
+    needs: [launcher, ffdec, cia-tools]
+    # The .cia tools may be missing for Windows; the packages still build.
+    if: ${{ !cancelled() && needs.launcher.result == 'success' && needs.ffdec.result == 'success' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          path: art
+      - name: Assemble
+        run: |
+          ver="${GITHUB_REF_NAME}"; case "$ver" in v*) ;; *) ver="dev" ;; esac
+          mkdir -p out
+          for os in linux windows; do
+            x=""; [ "$os" = windows ] && x=".exe"
+            d="DinoAttack-Launcher-$ver-$os"
+            mkdir -p "$d/tools" "$d/dino-port/source" "$d/docs"
+            cp "art/launcher-$os/dino-launcher$x" "$d/"
+            cp build.py requirements.txt LICENSE "$d/"
+            cp launcher/PACKAGE-README.txt "$d/README.txt"
+            cp launcher/THIRD-PARTY.txt "$d/"
+            cp tools/*.py tools/*.c tools/*.rsf tools/map_convert.js "$d/tools/"
+            if [ -d "art/cia-$os/bin" ]; then cp -r "art/cia-$os/bin/." "$d/tools/"; else echo "no .cia tools for $os"; fi
+            cp dino-port/source/main.c dino-port/source/audio.c dino-port/source/audio.h "$d/dino-port/source/"
+            cp docs/*.md "$d/docs/"
+            cp -r art/ffdec/ffdec_26.4.0 "$d/"
+            if [ "$os" = linux ]; then
+              chmod +x "$d/dino-launcher" "$d"/tools/makerom* "$d"/tools/bannertool 2>/dev/null || true
+              tar czf "out/$d.tar.gz" "$d"
+            else
+              zip -qr "out/$d.zip" "$d"
+            fi
+          done
+          ls -l out
+      - uses: actions/upload-artifact@v4
+        with:
+          name: packages
+          path: out/*
+      - name: Attach to the release
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          notes="Launcher packages for Windows and Linux. You need your own copy of the Dino Attack game files (the DinoAttackGame folder); nothing from the game is included. Unpack, install the requirements listed in README.txt, run dino-launcher, pick your game folder and SD card, and press Build."
+          gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1 || gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --notes "$notes"
+          gh release upload "$GITHUB_REF_NAME" out/* --clobber

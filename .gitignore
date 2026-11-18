@@ -10,6 +10,9 @@
 !/docs/
 !/tools/
 !/dino-port/
+!/launcher/
+!/.github/
+!/.github/workflows/
 
 # Only hand-written runtime source; generated headers and all atlases stay local.
 /dino-port/*
@@ -27,7 +30,13 @@
 !/tools/*.rsf
 !/tools/map_convert.js
 
-
+# The launcher: only its source and the package files; its build output stays in target/.
+/launcher/*
+!/launcher/src/
+!/launcher/Cargo.toml
+!/launcher/Cargo.lock
+!/launcher/PACKAGE-README.txt
+!/launcher/THIRD-PARTY.txt
 
 # Even in allowed directories, exclude common generated artifacts.
 *.3dsx

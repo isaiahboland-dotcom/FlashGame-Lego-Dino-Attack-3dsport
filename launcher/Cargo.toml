@@ -1,0 +1,15 @@
+[package]
+name = "dino-launcher"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+license = "MIT"
+description = "Point-and-click launcher: your Dino Attack game files in, Dino Attack for 3DS built and copied to your SD card"
+
+[[bin]]
+name = "dino-launcher"
+path = "src/main.rs"
+
+[dependencies]
+eframe = { version = "0.33.3", features = ["wgpu"] }
+rfd = "0.17.2"

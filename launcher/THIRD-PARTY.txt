@@ -1,0 +1,13 @@
+Programs this package uses besides the project's own:
+
+- FFDec 26.4.0 (JPEXS Free Flash Decompiler, GPL-3.0), included unchanged in
+  ffdec_26.4.0/ with its license.txt. Source and releases:
+  https://github.com/jindrapetrik/jpexs-decompiler
+- makerom (Project_CTR, https://github.com/3DSGuy/Project_CTR) and bannertool
+  (https://github.com/diasurgical/bannertool), built from the pinned source
+  revisions in the release workflow, for the .cia. Their licences are in
+  those repositories.
+
+Not included, and needed on your computer: Python 3 with Pillow and NumPy
+(MIT-CMU / BSD), Java, FFmpeg, and devkitPro (devkitARM, libctru, citro2d,
+citro3d). Install them from their own sites.

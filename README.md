@@ -19,6 +19,24 @@ timings are approximations, and the original ending movies are not implemented.
 
 ## Build from your files
 
+### The easy way: the launcher
+
+The launcher is a window that runs the build for you. Build it from source
+with `cargo build --release --manifest-path launcher/Cargo.toml`, or download
+the `DinoAttack-Launcher-<version>-linux.tar.gz` or `-windows.zip` package from
+the releases page. Either way it needs the tools listed under "Command line"
+below. The launcher's log lists anything missing when it starts.
+
+1. Run `dino-launcher` (`dino-launcher.exe` on Windows).
+2. Pick your `DinoAttackGame` folder (the one that contains `Launcher.swf`).
+3. Pick your SD card, tick `.3dsx` and/or `.cia`, and press **Build**.
+
+The launcher copies `3ds/dinodino.3dsx` and `cias/dinodino.cia` to the card and
+leaves your saves in `3ds/dinodino/` alone. The `.cia` option is experimental,
+and the Windows build is untested.
+
+### Command line
+
 The build pipeline has been developed on Linux. You need:
 
 - Python 3, [Pillow and NumPy](requirements.txt), Java, and FFmpeg on PATH.
