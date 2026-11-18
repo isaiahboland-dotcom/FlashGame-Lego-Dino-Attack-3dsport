@@ -65,4 +65,4 @@ terminal; see docs/BUILDING.md. `dino-launcher --check` prints where each
 program was found.
 
 Project and source: https://github.com/isaiahboland-dotcom/FlashGame-Lego-Dino-Attack-3dsport
-Licence: MIT for the project's code (see LICENSE). It does not cover the game.
+Licence: MIT for the project's code (see LICENSE.md). It does not cover the game.

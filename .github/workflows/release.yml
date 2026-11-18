@@ -139,7 +139,7 @@ jobs:
             d="DinoAttack-Launcher-$ver-$os"
             mkdir -p "$d/tools" "$d/dino-port/source" "$d/docs"
             cp "art/launcher-$os/dino-launcher$x" "$d/"
-            cp build.py requirements.txt LICENSE "$d/"
+            cp build.py requirements.txt LICENSE.md "$d/"
             cp launcher/PACKAGE-README.txt "$d/README.txt"
             cp launcher/THIRD-PARTY.txt "$d/"
             cp tools/*.py tools/*.c tools/*.rsf tools/map_convert.js "$d/tools/"
